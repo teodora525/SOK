@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Visualization Explorer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 { font-size: 28px; margin-bottom: 10px; }
+
+        .container {
+            display: grid;
+            grid-template-columns: 280px 1fr 200px;
+            gap: 10px;
+            padding: 10px;
+            height: calc(100vh - 100px);
+        }
+
+        .panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            padding: 15px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+            font-size: 12px;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .form-group input[type="file"] {
+            padding: 5px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            font-size: 12px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            width: 100%;
+        }
+
+        .btn-secondary:hover { background: #5a6268; }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 11px;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .main-view {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .tab-btn {
+            padding: 8px 15px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .tab-content {
+            flex: 1;
+            overflow: hidden;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #visualizer {
+            width: 100%;
+            height: 100%;
+            flex: 1;
+        }
+
+        .tree-node {
+            cursor: pointer;
+            user-select: none;
+            padding: 4px;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+
+        .tree-node:hover { background: #f0f0f0; }
+.tree-node-selected {
+    background: #fff3cd !important;
+    border-left: 3px solid #ff7f0e;
+    padding-left: 5px;
+}
+        .tree-toggle {
+            display: inline-block;
+            width: 20px;
+            margin-right: 5px;
+            text-align: center;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .tree-children {
+            margin-left: 20px;
+            display: none;
+        }
+
+        .tree-children.expanded { display: block; }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .workspace-item {
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
+        }
+
+        .workspace-item:hover {
+            background: #e9ecef;
+        }
+
+        .workspace-item.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .help-text {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .node-selected {
+    filter: drop-shadow(0 0 8px #ff7f0e) !important;
+}
+
+.node-rect-selected {
+    stroke: #ff7f0e !important;
+    stroke-width: 4px !important;
+    filter: drop-shadow(0 0 8px rgba(255, 127, 14, 0.5));
+}
+
+#node-details-content {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.node-detail-row {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.node-detail-row:last-child {
+    border-bottom: none;
+}
+
+.node-detail-label {
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 2px;
+}
+
+.node-detail-value {
+    color: #333;
+    word-break: break-word;
+}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Graph Visualization Explorer</h1>
+        <p>Interactive graph exploration with JSON & XML support</p>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <div class="panel-header">🎮 Controls</div>
+            <div class="panel-content">
+                <div id="error-msg" class="error"></div>
+                <div id="success-msg" class="success"></div>
+
+                <div class="form-group">
+                    <label>Data Source Plugin</label>
+                    <select id="data-source-select">
+                        <option value="">Select plugin...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Upload File</label>
+                    <input type="file" id="file-upload" accept=".json,.xml">
+                    <div class="help-text">Or use test data: family_tree.json, company_structure.xml</div>
+                </div>
+
+                <div id="plugin-params"></div>
+
+                <button class="btn btn-primary btn-small" onclick="loadGraph()">Load Graph</button>
+
+                <hr style="margin: 15px 0;">
+
+                <div class="form-group">
+                    <label>Visualizer</label>
+                    <select id="visualizer-select" onchange="changeVisualizer()">
+                        <option value="">Select visualizer...</option>
+                    </select>
+                </div>
+
+                <hr style="margin: 15px 0;">
+
+                <div class="form-group">
+                    <label>🔍 Search</label>
+                    <input type="text" id="search-input" placeholder="e.g., John, Engineer, 30">
+                    <button class="btn btn-secondary btn-small" onclick="performSearch()">Search</button>
+                    <div class="help-text">Searches in all node attributes (case-insensitive)</div>
+                </div>
+
+                <div class="form-group">
+                    <label>🔬 Filter</label>
+                    <input type="text" id="filter-input" placeholder="e.g., age > 30">
+                    <button class="btn btn-secondary btn-small" onclick="performFilter()">Filter</button>
+                    <div class="help-text">
+                        Examples:<br>
+                        • age > 30<br>
+                        • name == John<br>
+                        • age > 25 && gender == M
+                    </div>
+                </div>
+
+                <button class="btn btn-secondary btn-small" onclick="resetGraph()">Reset Graph</button>
+
+                <hr style="margin: 15px 0;">
+
+                <div id="graph-info" style="font-size: 12px; color: #666;">
+                    <p><strong>Graph Info:</strong></p>
+                    <p>Nodes: <span id="node-count">0</span></p>
+                    <p>Edges: <span id="edge-count">0</span></p>
+                    <p>Has Cycle: <span id="has-cycle">-</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel main-view">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('main')">Main View</button>
+                <button class="tab-btn" onclick="switchTab('tree')">Tree View</button>
+                <button class="tab-btn" onclick="switchTab('bird')">Bird View</button>
+            </div>
+            <div id="main" class="tab-content" >
+                <div id="visualizer"></div>
+            </div>
+            <div id="tree" class="tab-content" style="display: none; overflow-y: auto;">
+                <div id="tree-content" style="padding: 15px;"></div>
+            </div>
+            <div id="bird" class="tab-content" style="display: none;">
+                <svg id="bird-view" width="100%" height="100%"></svg>
+            </div>
+        </div>
+
+        <div class="panel">
+    <div class="panel-header">📂 Workspaces</div>
+    <div class="panel-content" style="padding: 10px;">
+        <div id="workspaces" style="font-size: 12px; margin-bottom: 15px;">
+            <div id="workspace-list"></div>
+            <div class="help-text" style="margin-top: 10px;">
+                Click on a workspace to switch to it
+            </div>
+        </div>
+
+        <hr style="margin: 15px 0; border: none; border-top: 1px solid #dee2e6;">
+
+        <div id="node-details-section" style="display: none;">
+            <div style="font-weight: bold; margin-bottom: 10px; color: #333;">
+                📍 Selected Node
+            </div>
+            <div id="node-details-content" style="font-size: 11px;"></div>
+            <button class="btn btn-secondary btn-small" onclick="deselectNode()" style="margin-top: 10px;">
+                Clear Selection
+            </button>
+        </div>
+
+        <div id="no-node-selected" style="font-size: 11px; color: #999; font-style: italic;">
+            Click on a node to view details
+        </div>
+    </div>
+</div>
+    </div>
+
+    <script>
+
+        let selectedNodeId = null;
+        window.onload = function() {
+            loadPlugins();
+        };
+
+        function loadPlugins() {
+            fetch('/api/plugins/')
+                .then(r => r.json())
+                .then(data => {
+                    const dSelect = document.getElementById('data-source-select');
+                    dSelect.innerHTML = '<option value="">Select plugin...</option>';
+
+                    data.data_source_plugins.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.name;
+                        opt.textContent = p.plugin_name;
+                        dSelect.appendChild(opt);
+                    });
+
+                    dSelect.onchange = updatePluginParams;
+
+                    const vSelect = document.getElementById('visualizer-select');
+                    vSelect.innerHTML = '<option value="">Select visualizer...</option>';
+
+                    data.visualizer_plugins.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.name;
+                        opt.textContent = p.plugin_name;
+                        vSelect.appendChild(opt);
+                    });
+
+                    updateWorkspaceList(data.workspaces, data.active_workspace);
+                });
+        }
+
+        function updatePluginParams() {
+            const select = document.getElementById('data-source-select');
+            const pluginName = select.value;
+            const container = document.getElementById('plugin-params');
+            container.innerHTML = '';
+
+            if (!pluginName) return;
+
+            fetch('/api/plugins/')
+                .then(r => r.json())
+                .then(data => {
+                    const plugin = data.data_source_plugins.find(p => p.name === pluginName);
+                    if (plugin) {
+                        Object.entries(plugin.required_parameters).forEach(([key, desc]) => {
+                            if (key !== 'file_path') {
+                                const div = document.createElement('div');
+                                div.className = 'form-group';
+                                div.innerHTML = `
+                                    <label>${desc}</label>
+                                    <input type="text" id="param-${key}" placeholder="${key}">
+                                `;
+                                container.appendChild(div);
+                            }
+                        });
+                    }
+                });
+        }
+
+        function loadGraph() {
+            const pluginName = document.getElementById('data-source-select').value;
+
+            if (!pluginName) {
+                showError('Select a data source plugin');
+                return;
+            }
+
+            const fileInput = document.getElementById('file-upload');
+            const file = fileInput.files[0];
+
+            const params = {};
+            document.querySelectorAll('#plugin-params input').forEach(input => {
+                const key = input.id.replace('param-', '');
+                const value = input.value.trim();
+                if (value) {
+                    params[key] = value;
+                }
+            });
+
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('plugin_name', pluginName);
+                formData.append('workspace_id', 'ws_' + Date.now());
+                formData.append('parameters', JSON.stringify(params));
+
+                showLoading('Uploading and loading graph...');
+
+                fetch('/api/upload-graph/', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        showSuccess('Graph loaded!');
+                        updateGraphInfo(data.graph_info);
+                        visualizeGraph();
+                        loadPlugins();
+                    } else {
+                        showError(data.error);
+                    }
+                })
+                .catch(e => showError(e.message));
+            } else {
+                const fileName = prompt('Enter filename from test data folder:', 'family_tree.json');
+                if (!fileName) return;
+
+                params['file_path'] = fileName;
+
+                showLoading('Loading graph...');
+
+                fetch('/api/load-graph/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        plugin_name: pluginName,
+                        workspace_id: 'ws_' + Date.now(),
+                        parameters: params
+                    })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        showSuccess('Graph loaded!');
+                        updateGraphInfo(data.graph_info);
+                        visualizeGraph();
+                        loadPlugins();
+                    } else {
+                        showError(data.error);
+                    }
+                })
+                .catch(e => showError(e.message));
+            }
+        }
+
+        function switchWorkspace(workspaceId) {
+            fetch('/api/switch-workspace/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({workspace_id: workspaceId})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccess('Switched to ' + workspaceId);
+                    updateGraphInfo(data.graph_info);
+                    visualizeGraph();
+                    loadPlugins();
+                } else {
+                    showError(data.error);
+                }
+            })
+            .catch(e => showError(e.message));
+        }
+
+        function changeVisualizer() {
+            visualizeGraph();
+        }
+
+        function visualizeGraph() {
+            const visualizer = document.getElementById('visualizer-select').value;
+
+            if (!visualizer) {
+                showError('Select a visualizer');
+                return;
+            }
+
+            showLoading('Rendering...');
+
+            fetch('/api/visualize/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({visualizer_name: visualizer})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const container = document.getElementById('visualizer');
+                    container.innerHTML = '';
+
+                    const temp = document.createElement('div');
+                    temp.innerHTML = data.html;
+
+                    while (temp.firstChild) {
+                        container.appendChild(temp.firstChild);
+                    }
+
+                    const scripts = container.querySelectorAll('script');
+                    scripts.forEach(oldScript => {
+                        const newScript = document.createElement('script');
+                        Array.from(oldScript.attributes).forEach(attr => {
+                            newScript.setAttribute(attr.name, attr.value);
+                        });
+                        newScript.textContent = oldScript.textContent;
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    });
+                } else {
+                    showError(data.error);
+                }
+            })
+            .catch(e => showError(e.message));
+        }
+
+        function performSearch() {
+            const query = document.getElementById('search-input').value;
+            if (!query) {
+                showError('Enter search query');
+                return;
+            }
+
+            fetch('/api/search/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({query: query})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const container = document.getElementById('visualizer');
+                    container.innerHTML = '';
+
+                    const temp = document.createElement('div');
+                    temp.innerHTML = data.html;
+
+                    while (temp.firstChild) {
+                        container.appendChild(temp.firstChild);
+                    }
+
+                    const scripts = container.querySelectorAll('script');
+                    scripts.forEach(oldScript => {
+                        const newScript = document.createElement('script');
+                        Array.from(oldScript.attributes).forEach(attr => {
+                            newScript.setAttribute(attr.name, attr.value);
+                        });
+                        newScript.textContent = oldScript.textContent;
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    });
+
+                    updateGraphInfo(data.graph_info);
+                    showSuccess(`Search found ${data.graph_info.nodes} nodes`);
+                } else {
+                    showError(data.error);
+                }
+            })
+            .catch(e => showError(e.message));
+        }
+
+         function performFilter() {
+            const filterExpr = document.getElementById('filter-input').value;
+            if (!filterExpr) {
+                showError('Enter filter expression');
+                return;
+            }
+
+            fetch('/api/filter/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({filter: filterExpr})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const container = document.getElementById('visualizer');
+                    container.innerHTML = '';
+
+                    const temp = document.createElement('div');
+                    temp.innerHTML = data.html;
+
+                    while (temp.firstChild) {
+                        container.appendChild(temp.firstChild);
+                    }
+
+                    const scripts = container.querySelectorAll('script');
+                    scripts.forEach(oldScript => {
+                        const newScript = document.createElement('script');
+                        Array.from(oldScript.attributes).forEach(attr => {
+                            newScript.setAttribute(attr.name, attr.value);
+                        });
+                        newScript.textContent = oldScript.textContent;
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    });
+
+                    updateGraphInfo(data.graph_info);
+                    showSuccess(`Filter found ${data.graph_info.nodes} nodes`);
+                } else {
+                    showError(data.error);
+                }
+            })
+            .catch(e => showError(e.message));
+        }
+
+        function resetGraph() {
+            fetch('/api/reset/', {method: 'POST'})
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const container = document.getElementById('visualizer');
+                        container.innerHTML = '';
+
+                        const temp = document.createElement('div');
+                        temp.innerHTML = data.html;
+
+                        while (temp.firstChild) {
+                            container.appendChild(temp.firstChild);
+                        }
+
+                        const scripts = container.querySelectorAll('script');
+                        scripts.forEach(oldScript => {
+                            const newScript = document.createElement('script');
+                            Array.from(oldScript.attributes).forEach(attr => {
+                                newScript.setAttribute(attr.name, attr.value);
+                            });
+                            newScript.textContent = oldScript.textContent;
+                            oldScript.parentNode.replaceChild(newScript, oldScript);
+                        });
+
+                        updateGraphInfo(data.graph_info);
+                        document.getElementById('search-input').value = '';
+                        document.getElementById('filter-input').value = '';
+                        showSuccess('Graph reset!');
+                    }
+                })
+                .catch(e => showError(e.message));
+        }
+
+        function updateGraphInfo(info) {
+            document.getElementById('node-count').textContent = info.nodes;
+            document.getElementById('edge-count').textContent = info.edges;
+            document.getElementById('has-cycle').textContent = info.has_cycle ? 'Yes' : 'No';
+        }
+
+        function updateWorkspaceList(workspaces, activeWorkspace) {
+            const list = document.getElementById('workspace-list');
+            if (workspaces.length === 0) {
+                list.innerHTML = '<p style="color: #999; font-size: 11px;">No workspaces yet. Load a graph to create one.</p>';
+                return;
+            }
+
+            list.innerHTML = workspaces.map(ws =>
+                `<div class="workspace-item ${ws.id === activeWorkspace ? 'active' : ''}" onclick="switchWorkspace('${ws.id}')">
+                    <strong>${ws.id}</strong><br>
+                    <small>${ws.graph_size}</small>
+                </div>`
+            ).join('');
+        }
+
+         function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+    document.getElementById(tab).style.display = 'block';
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+
+        if (tab === 'tree') {
+        loadTreeView();
+        // Re-aplikuj highlight ako postoji selekcija
+        if (selectedNodeId) {
+            setTimeout(() => highlightInTreeView(selectedNodeId), 100);
+        }
+    }
+
+    if (tab === 'bird') {
+        loadBirdView();
+        // Re-aplikuj highlight ako postoji selekcija
+        if (selectedNodeId) {
+            setTimeout(() => highlightInBirdView(selectedNodeId), 100);
+        }
+    }
+
+    if (tab === 'main') {
+        // Re-aplikuj highlight ako postoji selekcija
+        if (selectedNodeId) {
+            setTimeout(() => highlightInMainView(selectedNodeId), 100);
+        }
+    }
+}
+
+         function loadTreeView() {
+            fetch('/api/tree-view/')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.tree) {
+                        const html = buildTreeHTML(data.tree);
+                        document.getElementById('tree-content').innerHTML = html || '<p>No tree structure available</p>';
+                        attachTreeListeners();
+                    } else {
+                        document.getElementById('tree-content').innerHTML = '<p>No tree structure available</p>';
+                    }
+                });
+        }
+
+        function buildTreeHTML(node) {
+    if (!node) return '';
+    const hasChildren = node.children && node.children.length > 0;
+    const toggle = hasChildren ? '<span class="tree-toggle" onclick="toggleNode(event)">+</span>' : '<span class="tree-toggle"></span>';
+    const childrenHtml = node.children?.map(c => buildTreeHTML(c)).join('') || '';
+
+    return `
+        <div class="tree-node" data-node-id="${node.id}" onclick="selectNode('${node.id}')">
+            ${toggle}
+            <strong>${node.label}</strong>
+            ${hasChildren ? `<div class="tree-children">${childrenHtml}</div>` : ''}
+        </div>
+    `;
+}
+
+        function toggleNode(e) {
+            e.stopPropagation();
+            const toggle = e.target;
+            const children = toggle.parentElement.querySelector('.tree-children');
+            if (children) {
+                children.classList.toggle('expanded');
+                toggle.textContent = children.classList.contains('expanded') ? '−' : '+';
+            }
+        }
+
+        function attachTreeListeners() {
+            document.querySelectorAll('.tree-toggle').forEach(t => {
+                if (t.textContent) {
+                    const children = t.parentElement.querySelector('.tree-children');
+                    if (children) children.classList.remove('expanded');
+                }
+            });
+        }
+
+        function loadBirdView() {
+            fetch('/api/bird-view/')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        renderBirdView(data.nodes, data.links);
+                    }
+                });
+        }
+
+        function renderBirdView(nodes, links) {
+    const svg = document.getElementById('bird-view');
+    svg.innerHTML = '';
+
+    const width = svg.clientWidth;
+    const height = svg.clientHeight;
+
+    const simulation = d3.forceSimulation(nodes)
+        .force('link', d3.forceLink(links).id(d => d.id).distance(30))
+        .force('charge', d3.forceManyBody().strength(-100))
+        .force('center', d3.forceCenter(width / 2, height / 2))
+        .force('collision', d3.forceCollide().radius(10));
+
+    const g = d3.select(svg).append('g');
+
+    const link = g.selectAll('.link')
+        .data(links)
+        .enter()
+        .append('line')
+        .attr('class', 'link')
+        .attr('stroke', '#ccc')
+        .attr('stroke-width', 1);
+
+    const node = g.selectAll('.node')
+        .data(nodes)
+        .enter()
+        .append('circle')
+        .attr('class', 'node')
+        .attr('r', 3)
+        .attr('fill', '#667eea')
+        .style('cursor', 'pointer')
+        .on('click', function(event, d) {
+            event.stopPropagation();
+            selectNode(d.id);
+        });
+
+    simulation.on('tick', () => {
+        link
+            .attr('x1', d => d.source.x)
+            .attr('y1', d => d.source.y)
+            .attr('x2', d => d.target.x)
+            .attr('y2', d => d.target.y);
+
+        node
+            .attr('cx', d => d.x)
+            .attr('cy', d => d.y);
+    });
+
+    d3.select(svg).call(d3.zoom()
+        .scaleExtent([0.1, 10])
+        .on('zoom', (event) => {
+            g.attr('transform', event.transform);
+        }));
+}
+
+        function showError(msg) {
+            const el = document.getElementById('error-msg');
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 5000);
+        }
+
+        function showSuccess(msg) {
+            const el = document.getElementById('success-msg');
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 3000);
+        }
+
+        function showLoading(msg) {
+            const el = document.getElementById('visualizer');
+            el.innerHTML = `<div style="text-align:center;padding:50px;color:#667eea;"><p>${msg}</p></div>`;
+        }
+
+        function selectNode(nodeId) {
+    // Prvo očisti SVE prethodne selekcije
+    removeHighlightFromAllViews();
+
+    selectedNodeId = nodeId;
+
+    // Učitaj detalje o čvoru
+    fetch('/api/node-details/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({node_id: nodeId})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            displayNodeDetails(data.node);
+            // Posle što se očiste svi highlighti, primeni novi highlight na SVIM view-ovima
+            highlightInMainView(nodeId);
+            highlightInTreeView(nodeId);
+            highlightInBirdView(nodeId);
+        } else {
+            showError(data.error);
+        }
+    })
+    .catch(e => showError(e.message));
+}
+function displayNodeDetails(node) {
+    document.getElementById('no-node-selected').style.display = 'none';
+    document.getElementById('node-details-section').style.display = 'block';
+
+    let html = `
+        <div class="node-detail-row">
+            <div class="node-detail-label">ID:</div>
+            <div class="node-detail-value">${node.id}</div>
+        </div>
+    `;
+
+    // Prikaži atribute
+    if (Object.keys(node.attributes).length > 0) {
+        html += `<div class="node-detail-row">
+            <div class="node-detail-label">Attributes:</div>
+        </div>`;
+
+        for (const [key, value] of Object.entries(node.attributes)) {
+            html += `<div class="node-detail-row">
+                <div class="node-detail-label">${key}:</div>
+                <div class="node-detail-value">${value}</div>
+            </div>`;
+        }
+    }
+
+    // Prikaži statistiku
+    html += `
+        <div class="node-detail-row">
+            <div class="node-detail-label">Connections:</div>
+            <div class="node-detail-value">
+                Incoming: ${node.incoming_count}<br>
+                Outgoing: ${node.outgoing_count}<br>
+                Total Degree: ${node.degree}
+            </div>
+        </div>
+    `;
+
+         // Prikaži susede
+    if (node.neighbors.length > 0) {
+        html += `
+            <div class="node-detail-row">
+                <div class="node-detail-label">Neighbors (${node.neighbors.length}):</div>
+                <div class="node-detail-value">
+                    ${node.neighbors.map(n => `<span style="display: inline-block; background: #e9ecef; padding: 2px 6px; margin: 2px; border-radius: 3px; cursor: pointer;" onclick="selectNode('${n}')">${n}</span>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    document.getElementById('node-details-content').innerHTML = html;
+}
+
+        function deselectNode() {
+    selectedNodeId = null;
+    document.getElementById('no-node-selected').style.display = 'block';
+    document.getElementById('node-details-section').style.display = 'none';
+    removeHighlightFromAllViews();
+}
+
+function highlightNodeInAllViews(nodeId) {
+    // Main View - obeležavanje zavisi od visualizera
+    highlightInMainView(nodeId);
+
+    // Tree View
+    highlightInTreeView(nodeId);
+
+    // Bird View
+    highlightInBirdView(nodeId);
+}
+
+function removeHighlightFromAllViews() {
+    // Main View - Simple Visualizer
+    d3.select('#simple-svg').selectAll('circle')
+        .classed('node-selected', false)
+        .attr('r', 10)
+        .attr('fill', '#1f77b4');
+
+    // Main View - Block Visualizer
+    d3.select('#block-svg').selectAll('.node-rect')
+        .classed('node-rect-selected', false)
+        .attr('stroke', '#333')
+        .attr('stroke-width', 2)
+        .style('filter', 'none');
+
+    // Tree View
+    document.querySelectorAll('.tree-node-selected').forEach(el => {
+        el.classList.remove('tree-node-selected');
+    });
+
+    // Bird View
+    d3.select('#bird-view').selectAll('circle')
+        .attr('r', 3)
+        .attr('fill', '#667eea');
+}
+
+function highlightInMainView(nodeId) {
+    // Za Simple Visualizer
+    d3.select('#simple-svg').selectAll('circle')
+        .each(function(d) {
+            const isMatch = d && d.id === nodeId;
+            d3.select(this)
+                .classed('node-selected', isMatch)
+                .attr('fill', isMatch ? '#ff7f0e' : '#1f77b4')
+                .attr('r', isMatch ? 15 : 10);
+        });
+
+    // Za Block Visualizer
+    d3.select('#block-svg').selectAll('.node-rect')
+        .each(function(d) {
+            const isMatch = d && d.id === nodeId;
+            d3.select(this)
+                .classed('node-rect-selected', isMatch)
+                .attr('stroke', isMatch ? '#ff7f0e' : '#333')
+                .attr('stroke-width', isMatch ? 4 : 2)
+                .style('filter', isMatch ? 'drop-shadow(0 0 8px rgba(255, 127, 14, 0.5))' : 'none');
+        });
+}
+function highlightInTreeView(nodeId) {
+    document.querySelectorAll('.tree-node').forEach(node => {
+        node.classList.remove('tree-node-selected');
+        if (node.dataset.nodeId === nodeId) {
+            node.classList.add('tree-node-selected');
+            node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+}
+
+function highlightInBirdView(nodeId) {
+    d3.select('#bird-view').selectAll('circle')
+        .each(function(d) {
+            const isMatch = d && d.id === nodeId;
+            d3.select(this)
+                .attr('r', isMatch ? 6 : 3)
+                .attr('fill', isMatch ? '#ff7f0e' : '#667eea');
+        });
+}
+    </script>
+</body>
+</html>
