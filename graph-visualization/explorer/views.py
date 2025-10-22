@@ -335,3 +335,34 @@ def search(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
+@require_http_methods(["POST"])
+def filter_graph(request):
+    """Filtriraj aktivni graf"""
+    try:
+        data = json.loads(request.body)
+        platform = get_platform()
+
+        filter_expr = data.get('filter', '')
+
+        if not filter_expr:
+            return JsonResponse({'success': False, 'error': 'Filter expression is required'}, status=400)
+
+        platform.filter_in_active_workspace(filter_expr)
+
+        workspace = platform.graph_manager.get_active_workspace()
+        graph = workspace.get_current_graph()
+
+        html = platform.visualize_current_graph(current_visualizer or 'Simple Visualizer')
+
+        return JsonResponse({
+            'success': True,
+            'html': html,
+            'graph_info': {
+                'nodes': graph.get_number_of_nodes(),
+                'edges': graph.get_number_of_edges()
+            },
+            'filter_history': workspace.filter_history
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
