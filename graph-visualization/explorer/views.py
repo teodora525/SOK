@@ -335,6 +335,7 @@ def search(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
+
 @require_http_methods(["POST"])
 def filter_graph(request):
     """Filtriraj aktivni graf"""
@@ -366,3 +367,112 @@ def filter_graph(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
+
+@require_http_methods(["POST"])
+def reset(request):
+    """Resetuj aktivni workspace"""
+    try:
+        platform = get_platform()
+        platform.reset_active_workspace()
+
+        workspace = platform.graph_manager.get_active_workspace()
+        graph = workspace.get_current_graph()
+
+        html = platform.visualize_current_graph(current_visualizer or 'Simple Visualizer')
+
+        return JsonResponse({
+            'success': True,
+            'html': html,
+            'graph_info': {
+                'nodes': graph.get_number_of_nodes(),
+                'edges': graph.get_number_of_edges()
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@require_http_methods(["GET"])
+def tree_view(request):
+    """Uzmi JSON za tree view prikaz"""
+    try:
+        platform = get_platform()
+        workspace = platform.graph_manager.get_active_workspace()
+
+        if not workspace:
+            return JsonResponse({'success': False, 'error': 'No active workspace'}, status=400)
+
+        graph = workspace.get_current_graph()
+
+        if graph.get_number_of_nodes() == 0:
+            return JsonResponse({'success': True, 'tree': {}})
+
+        root_node = graph.get_all_nodes()[0]
+        tree = _build_tree(root_node, set(), graph)
+
+        return JsonResponse({
+            'success': True,
+            'tree': tree
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@require_http_methods(["GET"])
+def bird_view(request):
+    """Uzmi podatke za bird view (miniature grafa)"""
+    try:
+        platform = get_platform()
+        workspace = platform.graph_manager.get_active_workspace()
+
+        if not workspace:
+            return JsonResponse({'success': False, 'error': 'No active workspace'}, status=400)
+
+        graph = workspace.get_current_graph()
+
+        nodes = [
+            {
+                'id': node.node_id,
+                'label': str(node.get_attribute('name') or node.node_id)
+            }
+            for node in graph.get_all_nodes()
+        ]
+
+        links = [
+            {
+                'source': edge.source_node.node_id,
+                'target': edge.target_node.node_id
+            }
+            for edge in graph.get_all_edges()
+        ]
+
+        return JsonResponse({
+            'success': True,
+            'nodes': nodes,
+            'links': links
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+def _build_tree(node, visited, graph, max_depth=10, current_depth=0):
+    """Rekurzivno gradi tree strukturu"""
+    if current_depth > max_depth or node.node_id in visited:
+        return None
+
+    visited.add(node.node_id)
+
+    children = []
+    for neighbor in graph.get_neighbors(node):
+        if neighbor.node_id not in visited:
+            child_tree = _build_tree(neighbor, visited, graph, max_depth, current_depth + 1)
+            if child_tree:
+                children.append(child_tree)
+
+    return {
+        'id': node.node_id,
+        'label': str(node.get_attribute('name') or node.node_id),
+        'attributes': node.get_all_attributes(),
+        'children': children,
+        'expandable': len(children) > 0
+    }
