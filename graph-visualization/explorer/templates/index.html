@@ -933,8 +933,7 @@
     })
     .catch(e => showError(e.message));
 }
-
-        function displayNodeDetails(node) {
+function displayNodeDetails(node) {
     document.getElementById('no-node-selected').style.display = 'none';
     document.getElementById('node-details-section').style.display = 'block';
 
@@ -958,6 +957,18 @@
             </div>`;
         }
     }
+
+    // Prikaži statistiku
+    html += `
+        <div class="node-detail-row">
+            <div class="node-detail-label">Connections:</div>
+            <div class="node-detail-value">
+                Incoming: ${node.incoming_count}<br>
+                Outgoing: ${node.outgoing_count}<br>
+                Total Degree: ${node.degree}
+            </div>
+        </div>
+    `;
 
          // Prikaži susede
     if (node.neighbors.length > 0) {
