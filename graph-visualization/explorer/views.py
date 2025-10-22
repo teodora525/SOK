@@ -231,3 +231,40 @@ def upload_graph(request):
         traceback.print_exc()
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
+
+@require_http_methods(["POST"])
+def switch_workspace(request):
+    """Prebaci se na drugi workspace"""
+    try:
+        data = json.loads(request.body)
+        platform = get_platform()
+
+        workspace_id = data.get('workspace_id')
+
+        if not workspace_id:
+            return JsonResponse({'success': False, 'error': 'workspace_id is required'}, status=400)
+
+        # Proveri da li workspace postoji
+        workspace = platform.graph_manager.get_workspace(workspace_id)
+        if not workspace:
+            return JsonResponse({'success': False, 'error': f'Workspace {workspace_id} not found'}, status=400)
+
+        # Prebaci se na taj workspace
+        platform.graph_manager.set_active_workspace(workspace_id)
+
+        graph = workspace.get_current_graph()
+
+        return JsonResponse({
+            'success': True,
+            'workspace_id': workspace_id,
+            'graph_info': {
+                'nodes': graph.get_number_of_nodes(),
+                'edges': graph.get_number_of_edges(),
+                'has_cycle': graph.has_cycle()
+            }
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
