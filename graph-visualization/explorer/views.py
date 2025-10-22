@@ -268,3 +268,38 @@ def switch_workspace(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+@require_http_methods(["POST"])
+def visualize(request):
+    """Vizuelizuj trenutni graf"""
+    try:
+        data = json.loads(request.body)
+        platform = get_platform()
+        global current_visualizer
+
+        visualizer_name = data.get('visualizer_name', 'Simple Visualizer')
+        current_visualizer = visualizer_name
+
+        workspace = platform.graph_manager.get_active_workspace()
+        if not workspace:
+            print("❌ No active workspace!")
+            return JsonResponse({'success': False, 'error': 'No active workspace'}, status=400)
+
+        graph = workspace.get_current_graph()
+        print(f"🎨 Visualizing {graph.get_number_of_nodes()} nodes with {visualizer_name}")
+
+        if graph.get_number_of_nodes() == 0:
+            print("⚠️ Graph is empty!")
+            return JsonResponse({'success': False, 'error': 'Graph is empty'}, status=400)
+
+        html = platform.visualize_current_graph(visualizer_name)
+
+        return JsonResponse({
+            'success': True,
+            'html': html
+        })
+    except Exception as e:
+        print(f"❌ Error in visualize: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
