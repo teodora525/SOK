@@ -974,8 +974,90 @@
     document.getElementById('node-details-content').innerHTML = html;
 }
 
+        function deselectNode() {
+    selectedNodeId = null;
+    document.getElementById('no-node-selected').style.display = 'block';
+    document.getElementById('node-details-section').style.display = 'none';
+    removeHighlightFromAllViews();
+}
 
-        
+function highlightNodeInAllViews(nodeId) {
+    // Main View - obeležavanje zavisi od visualizera
+    highlightInMainView(nodeId);
+
+    // Tree View
+    highlightInTreeView(nodeId);
+
+    // Bird View
+    highlightInBirdView(nodeId);
+}
+
+function removeHighlightFromAllViews() {
+    // Main View - Simple Visualizer
+    d3.select('#simple-svg').selectAll('circle')
+        .classed('node-selected', false)
+        .attr('r', 10)
+        .attr('fill', '#1f77b4');
+
+    // Main View - Block Visualizer
+    d3.select('#block-svg').selectAll('.node-rect')
+        .classed('node-rect-selected', false)
+        .attr('stroke', '#333')
+        .attr('stroke-width', 2)
+        .style('filter', 'none');
+
+    // Tree View
+    document.querySelectorAll('.tree-node-selected').forEach(el => {
+        el.classList.remove('tree-node-selected');
+    });
+
+    // Bird View
+    d3.select('#bird-view').selectAll('circle')
+        .attr('r', 3)
+        .attr('fill', '#667eea');
+}
+
+function highlightInMainView(nodeId) {
+    // Za Simple Visualizer
+    d3.select('#simple-svg').selectAll('circle')
+        .each(function(d) {
+            const isMatch = d && d.id === nodeId;
+            d3.select(this)
+                .classed('node-selected', isMatch)
+                .attr('fill', isMatch ? '#ff7f0e' : '#1f77b4')
+                .attr('r', isMatch ? 15 : 10);
+        });
+
+    // Za Block Visualizer
+    d3.select('#block-svg').selectAll('.node-rect')
+        .each(function(d) {
+            const isMatch = d && d.id === nodeId;
+            d3.select(this)
+                .classed('node-rect-selected', isMatch)
+                .attr('stroke', isMatch ? '#ff7f0e' : '#333')
+                .attr('stroke-width', isMatch ? 4 : 2)
+                .style('filter', isMatch ? 'drop-shadow(0 0 8px rgba(255, 127, 14, 0.5))' : 'none');
+        });
+}
+function highlightInTreeView(nodeId) {
+    document.querySelectorAll('.tree-node').forEach(node => {
+        node.classList.remove('tree-node-selected');
+        if (node.dataset.nodeId === nodeId) {
+            node.classList.add('tree-node-selected');
+            node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+}
+
+function highlightInBirdView(nodeId) {
+    d3.select('#bird-view').selectAll('circle')
+        .each(function(d) {
+            const isMatch = d && d.id === nodeId;
+            d3.select(this)
+                .attr('r', isMatch ? 6 : 3)
+                .attr('fill', isMatch ? '#ff7f0e' : '#667eea');
+        });
+}
     </script>
 </body>
 </html>
