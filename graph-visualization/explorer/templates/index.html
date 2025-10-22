@@ -751,6 +751,30 @@
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     event.target.classList.add('active');
 
+        if (tab === 'tree') {
+        loadTreeView();
+        // Re-aplikuj highlight ako postoji selekcija
+        if (selectedNodeId) {
+            setTimeout(() => highlightInTreeView(selectedNodeId), 100);
+        }
+    }
+
+    if (tab === 'bird') {
+        loadBirdView();
+        // Re-aplikuj highlight ako postoji selekcija
+        if (selectedNodeId) {
+            setTimeout(() => highlightInBirdView(selectedNodeId), 100);
+        }
+    }
+
+    if (tab === 'main') {
+        // Re-aplikuj highlight ako postoji selekcija
+        if (selectedNodeId) {
+            setTimeout(() => highlightInMainView(selectedNodeId), 100);
+        }
+    }
+}
+
         
     </script>
 </body>
