@@ -45,7 +45,7 @@ class Edge:
         self.attribute_types: Dict[str, ValueType] = {}
 
         # Dodaj atribute sa type detektovanjem
-        for key, value in attributes:
+        for key, value in attributes.items():  # ✅ DODATO .items()
             self.set_attribute(key, value)
 
     def set_attribute(self, key: str, value: Any) -> None:
