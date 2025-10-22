@@ -907,6 +907,59 @@
             el.innerHTML = `<div style="text-align:center;padding:50px;color:#667eea;"><p>${msg}</p></div>`;
         }
 
+        function selectNode(nodeId) {
+    // Prvo očisti SVE prethodne selekcije
+    removeHighlightFromAllViews();
+
+    selectedNodeId = nodeId;
+
+    // Učitaj detalje o čvoru
+    fetch('/api/node-details/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({node_id: nodeId})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            displayNodeDetails(data.node);
+            // Posle što se očiste svi highlighti, primeni novi highlight na SVIM view-ovima
+            highlightInMainView(nodeId);
+            highlightInTreeView(nodeId);
+            highlightInBirdView(nodeId);
+        } else {
+            showError(data.error);
+        }
+    })
+    .catch(e => showError(e.message));
+}
+
+        function displayNodeDetails(node) {
+    document.getElementById('no-node-selected').style.display = 'none';
+    document.getElementById('node-details-section').style.display = 'block';
+
+    let html = `
+        <div class="node-detail-row">
+            <div class="node-detail-label">ID:</div>
+            <div class="node-detail-value">${node.id}</div>
+        </div>
+    `;
+
+    // Prikaži atribute
+    if (Object.keys(node.attributes).length > 0) {
+        html += `<div class="node-detail-row">
+            <div class="node-detail-label">Attributes:</div>
+        </div>`;
+
+        for (const [key, value] of Object.entries(node.attributes)) {
+            html += `<div class="node-detail-row">
+                <div class="node-detail-label">${key}:</div>
+                <div class="node-detail-value">${value}</div>
+            </div>`;
+        }
+    }
+
+
         
     </script>
 </body>
