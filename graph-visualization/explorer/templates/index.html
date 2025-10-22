@@ -775,6 +775,35 @@
     }
 }
 
+         function loadTreeView() {
+            fetch('/api/tree-view/')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.tree) {
+                        const html = buildTreeHTML(data.tree);
+                        document.getElementById('tree-content').innerHTML = html || '<p>No tree structure available</p>';
+                        attachTreeListeners();
+                    } else {
+                        document.getElementById('tree-content').innerHTML = '<p>No tree structure available</p>';
+                    }
+                });
+        }
+
+        function buildTreeHTML(node) {
+    if (!node) return '';
+    const hasChildren = node.children && node.children.length > 0;
+    const toggle = hasChildren ? '<span class="tree-toggle" onclick="toggleNode(event)">+</span>' : '<span class="tree-toggle"></span>';
+    const childrenHtml = node.children?.map(c => buildTreeHTML(c)).join('') || '';
+
+    return `
+        <div class="tree-node" data-node-id="${node.id}" onclick="selectNode('${node.id}')">
+            ${toggle}
+            <strong>${node.label}</strong>
+            ${hasChildren ? `<div class="tree-children">${childrenHtml}</div>` : ''}
+        </div>
+    `;
+}
+
         
     </script>
 </body>
