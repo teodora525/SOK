@@ -724,6 +724,33 @@
                 .catch(e => showError(e.message));
         }
 
+        function updateGraphInfo(info) {
+            document.getElementById('node-count').textContent = info.nodes;
+            document.getElementById('edge-count').textContent = info.edges;
+            document.getElementById('has-cycle').textContent = info.has_cycle ? 'Yes' : 'No';
+        }
+
+        function updateWorkspaceList(workspaces, activeWorkspace) {
+            const list = document.getElementById('workspace-list');
+            if (workspaces.length === 0) {
+                list.innerHTML = '<p style="color: #999; font-size: 11px;">No workspaces yet. Load a graph to create one.</p>';
+                return;
+            }
+
+            list.innerHTML = workspaces.map(ws =>
+                `<div class="workspace-item ${ws.id === activeWorkspace ? 'active' : ''}" onclick="switchWorkspace('${ws.id}')">
+                    <strong>${ws.id}</strong><br>
+                    <small>${ws.graph_size}</small>
+                </div>`
+            ).join('');
+        }
+
+         function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+    document.getElementById(tab).style.display = 'block';
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+
         
     </script>
 </body>
