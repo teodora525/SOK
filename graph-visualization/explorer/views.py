@@ -303,3 +303,35 @@ def visualize(request):
         traceback.print_exc()
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
+
+@require_http_methods(["POST"])
+def search(request):
+    """Pretraži u aktivnom grafu"""
+    try:
+        data = json.loads(request.body)
+        platform = get_platform()
+
+        query = data.get('query', '')
+
+        if not query:
+            return JsonResponse({'success': False, 'error': 'Query is required'}, status=400)
+
+        platform.search_in_active_workspace(query)
+
+        workspace = platform.graph_manager.get_active_workspace()
+        graph = workspace.get_current_graph()
+
+        html = platform.visualize_current_graph(current_visualizer or 'Simple Visualizer')
+
+        return JsonResponse({
+            'success': True,
+            'html': html,
+            'graph_info': {
+                'nodes': graph.get_number_of_nodes(),
+                'edges': graph.get_number_of_edges()
+            },
+            'search_history': workspace.search_history
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
