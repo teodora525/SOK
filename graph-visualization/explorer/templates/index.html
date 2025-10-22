@@ -804,6 +804,109 @@
     `;
 }
 
+        function toggleNode(e) {
+            e.stopPropagation();
+            const toggle = e.target;
+            const children = toggle.parentElement.querySelector('.tree-children');
+            if (children) {
+                children.classList.toggle('expanded');
+                toggle.textContent = children.classList.contains('expanded') ? '−' : '+';
+            }
+        }
+
+        function attachTreeListeners() {
+            document.querySelectorAll('.tree-toggle').forEach(t => {
+                if (t.textContent) {
+                    const children = t.parentElement.querySelector('.tree-children');
+                    if (children) children.classList.remove('expanded');
+                }
+            });
+        }
+
+        function loadBirdView() {
+            fetch('/api/bird-view/')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        renderBirdView(data.nodes, data.links);
+                    }
+                });
+        }
+
+        function renderBirdView(nodes, links) {
+    const svg = document.getElementById('bird-view');
+    svg.innerHTML = '';
+
+    const width = svg.clientWidth;
+    const height = svg.clientHeight;
+
+    const simulation = d3.forceSimulation(nodes)
+        .force('link', d3.forceLink(links).id(d => d.id).distance(30))
+        .force('charge', d3.forceManyBody().strength(-100))
+        .force('center', d3.forceCenter(width / 2, height / 2))
+        .force('collision', d3.forceCollide().radius(10));
+
+    const g = d3.select(svg).append('g');
+
+    const link = g.selectAll('.link')
+        .data(links)
+        .enter()
+        .append('line')
+        .attr('class', 'link')
+        .attr('stroke', '#ccc')
+        .attr('stroke-width', 1);
+
+    const node = g.selectAll('.node')
+        .data(nodes)
+        .enter()
+        .append('circle')
+        .attr('class', 'node')
+        .attr('r', 3)
+        .attr('fill', '#667eea')
+        .style('cursor', 'pointer')
+        .on('click', function(event, d) {
+            event.stopPropagation();
+            selectNode(d.id);
+        });
+
+    simulation.on('tick', () => {
+        link
+            .attr('x1', d => d.source.x)
+            .attr('y1', d => d.source.y)
+            .attr('x2', d => d.target.x)
+            .attr('y2', d => d.target.y);
+
+        node
+            .attr('cx', d => d.x)
+            .attr('cy', d => d.y);
+    });
+
+    d3.select(svg).call(d3.zoom()
+        .scaleExtent([0.1, 10])
+        .on('zoom', (event) => {
+            g.attr('transform', event.transform);
+        }));
+}
+
+        function showError(msg) {
+            const el = document.getElementById('error-msg');
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 5000);
+        }
+
+        function showSuccess(msg) {
+            const el = document.getElementById('success-msg');
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 3000);
+        }
+
+        function showLoading(msg) {
+            const el = document.getElementById('visualizer');
+            el.innerHTML = `<div style="text-align:center;padding:50px;color:#667eea;"><p>${msg}</p></div>`;
+        }
+
         
     </script>
 </body>
