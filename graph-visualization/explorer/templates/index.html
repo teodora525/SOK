@@ -646,6 +646,50 @@
             .catch(e => showError(e.message));
         }
 
+         function performFilter() {
+            const filterExpr = document.getElementById('filter-input').value;
+            if (!filterExpr) {
+                showError('Enter filter expression');
+                return;
+            }
+
+            fetch('/api/filter/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({filter: filterExpr})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const container = document.getElementById('visualizer');
+                    container.innerHTML = '';
+
+                    const temp = document.createElement('div');
+                    temp.innerHTML = data.html;
+
+                    while (temp.firstChild) {
+                        container.appendChild(temp.firstChild);
+                    }
+
+                    const scripts = container.querySelectorAll('script');
+                    scripts.forEach(oldScript => {
+                        const newScript = document.createElement('script');
+                        Array.from(oldScript.attributes).forEach(attr => {
+                            newScript.setAttribute(attr.name, attr.value);
+                        });
+                        newScript.textContent = oldScript.textContent;
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    });
+
+                    updateGraphInfo(data.graph_info);
+                    showSuccess(`Filter found ${data.graph_info.nodes} nodes`);
+                } else {
+                    showError(data.error);
+                }
+            })
+            .catch(e => showError(e.message));
+        }
+
         
     </script>
 </body>
