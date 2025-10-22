@@ -959,6 +959,21 @@
         }
     }
 
+         // Prikaži susede
+    if (node.neighbors.length > 0) {
+        html += `
+            <div class="node-detail-row">
+                <div class="node-detail-label">Neighbors (${node.neighbors.length}):</div>
+                <div class="node-detail-value">
+                    ${node.neighbors.map(n => `<span style="display: inline-block; background: #e9ecef; padding: 2px 6px; margin: 2px; border-radius: 3px; cursor: pointer;" onclick="selectNode('${n}')">${n}</span>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    document.getElementById('node-details-content').innerHTML = html;
+}
+
 
         
     </script>
