@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<company>
+    <department id="dept_1" name="CEO Office" budget="5000000">
+        <role id="role_1" title="Chief Executive Officer">
+            <person id="p1">
+                <name>John Executive</name>
+                <salary>500000</salary>
+                <years_experience>25</years_experience>
+            </person>
+        </role>
+    </department>
+
+    <department id="dept_2" name="Engineering" budget="3000000" manages="dept_1">
+        <role id="role_2" title="VP Engineering">
+            <person id="p2">
+                <name>Jane Engineer</name>
+                <salary>350000</salary>
+                <years_experience>20</years_experience>
+            </person>
+        </role>
+        <team id="team_1" name="Backend Team">
+            <role id="role_3" title="Senior Developer">
+                <person id="p3">
+                    <name>Bob Developer</name>
+                    <salary>150000</salary>
+                    <years_experience>15</years_experience>
+                </person>
+            </role>
+            <role id="role_4" title="Developer">
+                <person id="p4">
+                    <name>Alice Coder</name>
+                    <salary>120000</salary>
+                    <years_experience>5</years_experience>
+                </person>
+            </role>
+            <role id="role_5" title="Developer">
+                <person id="p5">
+                    <name>Charlie Dev</name>
+                    <salary>110000</salary>
+                    <years_experience>3</years_experience>
+                </person>
+            </role>
+        </team>
+        <team id="team_2" name="Frontend Team">
+            <role id="role_6" title="Senior Developer">
+                <person id="p6">
+                    <name>Diana Frontend</name>
+                    <salary>140000</salary>
+                    <years_experience>12</years_experience>
+                </person>
+            </role>
+            <role id="role_7" title="Developer">
+                <person id="p7">
+                    <name>Eve UI</name>
+                    <salary>115000</salary>
+                    <years_experience>4</years_experience>
+                </person>
+            </role>
+        </team>
+        <team id="team_3" name="DevOps Team">
+            <role id="role_8" title="DevOps Lead">
+                <person id="p8">
+                    <name>Frank Ops</name>
+                    <salary>160000</salary>
+                    <years_experience>14</years_experience>
+                </person>
+            </role>
+            <role id="role_9" title="DevOps Engineer">
+                <person id="p9">
+                    <name>Grace Cloud</name>
+                    <salary>125000</salary>
+                    <years_experience>6</years_experience>
+                </person>
+            </role>
+        </team>
+    </department>
+
+    <department id="dept_3" name="Sales" budget="2000000" manages="dept_1">
+        <role id="role_10" title="VP Sales">
+            <person id="p10">
+                <name>Henry Seller</name>
+                <salary>300000</salary>
+                <years_experience>18</years_experience>
+            </person>
+        </role>
+        <team id="team_4" name="Enterprise Sales">
+            <role id="role_11" title="Senior Account Executive">
+                <person id="p11">
+                    <name>Ivy Sales</name>
+                    <salary>160000</salary>
+                    <years_experience>10</years_experience>
+                </person>
+            </role>
+            <role id="role_12" title="Account Executive">
+                <person id="p12">
+                    <name>Jack Seller</name>
+                    <salary>120000</salary>
+                    <years_experience>4</years_experience>
+                </person>
+            </role>
+            <role id="role_13" title="Account Executive">
+                <person id="p13">
+                    <name>Karen Deal</name>
+                    <salary>115000</salary>
+                    <years_experience>3</years_experience>
+                </person>
+            </role>
+        </team>
+        <team id="team_5" name="SMB Sales">
+            <role id="role_14" title="Sales Manager">
+                <person id="p14">
+                    <name>Leo Manager</name>
+                    <salary>140000</salary>
+                    <years_experience>8</years_experience>
+                </person>
+            </role>
+            <role id="role_15" title="Sales Representative">
+                <person id="p15">
+                    <name>Mia Rep</name>
+                    <salary>90000</salary>
+                    <years_experience>2</years_experience>
+                </person>
+            </role>
+            <role id="role_16" title="Sales Representative">
+                <person id="p16">
+                    <name>Noah Sales</name>
+                    <salary>88000</salary>
+                    <years_experience>1</years_experience>
+                </person>
+            </role>
+        </team>
+    </department>
+
+    <department id="dept_4" name="Marketing" budget="1500000" manages="dept_1">
+        <role id="role_17" title="VP Marketing">
+            <person id="p17">
+                <name>Olivia Marketing</name>
+                <salary>280000</salary>
+                <years_experience>16</years_experience>
+            </person>
+        </role>
+        <team id="team_6" name="Product Marketing">
+            <role id="role_18" title="Product Marketing Manager">
+                <person id="p18">
+                    <name>Peter Product</name>
+                    <salary>140000</salary>
+                    <years_experience>9</years_experience>
+                </person>
+            </role>
+            <role id="role_19" title="Product Specialist">
+                <person id="p19">
+                    <name>Quinn Spec</name>
+                    <salary>110000</salary>
+                    <years_experience>3</years_experience>
+                </person>
+            </role>
+        </team>
+        <team id="team_7" name="Content Marketing">
+            <role id="role_20" title="Content Lead">
+                <person id="p20">
+                    <name>Rachel Content</name>
+                    <salary>135000</salary>
+                    <years_experience>8</years_experience>
+                </person>
+            </role>
+            <role id="role_21" title="Content Writer">
+                <person id="p21">
+                    <name>Steve Writer</name>
+                    <salary>95000</salary>
+                    <years_experience>2</years_experience>
+                </person>
+            </role>
+        </team>
+    </department>
+
+    <department id="dept_5" name="Human Resources" budget="800000" manages="dept_1">
+        <role id="role_22" title="VP HR">
+            <person id="p22">
+                <name>Tina HR</name>
+                <salary>250000</salary>
+                <years_experience>14</years_experience>
+            </person>
+        </role>
+        <team id="team_8" name="Recruiting">
+            <role id="role_23" title="Recruiting Manager">
+                <person id="p23">
+                    <name>Uma Recruiter</name>
+                    <salary>130000</salary>
+                    <years_experience>7</years_experience>
+                </person>
+            </role>
+            <role id="role_24" title="Recruiter">
+                <person id="p24">
+                    <name>Victor Hire</name>
+                    <salary>100000</salary>
+                    <years_experience>3</years_experience>
+                </person>
+            </role>
+        </team>
+    </department>
+
+    <department id="dept_6" name="Finance" budget="600000" manages="dept_1">
+        <role id="role_25" title="CFO">
+            <person id="p25">
+                <name>Wendy Finance</name>
+                <salary>400000</salary>
+                <years_experience>22</years_experience>
+            </person>
+        </role>
+        <team id="team_9" name="Accounting">
+            <role id="role_26" title="Accounting Manager">
+                <person id="p26">
+                    <name>Xander Accountant</name>
+                    <salary>120000</salary>
+                    <years_experience>6</years_experience>
+                </person>
+            </role>
+        </team>
+    </department>
+</company>
