@@ -33,7 +33,7 @@
 ### Frontend
 - **HTML5/CSS3** - Modern web interface
 - **JavaScript** - Interactive UI components
-- **D3.js** (implied) - Graph visualizations
+- **D3.js 7.8.5** - Force-directed graph visualizations
 
 ### Architecture
 - **Plugin System** - Modular, extensible architecture
@@ -217,7 +217,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Authors
 
-- **Graph Visualization Team** - *Initial work*
+- **[Teodora Nikolić](https://github.com/teodora525)** - *Creator and maintainer*
 
 ## 🙏 Acknowledgments
 
