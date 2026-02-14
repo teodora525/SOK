@@ -232,5 +232,5 @@ For questions and support, please open an issue in the GitHub repository.
 ---
 
 <div align="center">
-  Made with ❤️ by the Graph Visualization Team
+  Made with ❤️ by <a href="https://github.com/teodora525">Teodora Nikolić</a>
 </div>
